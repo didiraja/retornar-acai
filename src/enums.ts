@@ -3,20 +3,28 @@ export const fruits: string[] = ["MORANGO", "BANANA", "KIWI"];
 export interface ISizes {
   label: "PEQUENO" | "MÉDIO" | "GRANDE";
   size: "300" | "500" | "700";
+  price: number;
+  delivery: number;
 }
 
 export const sizes: ISizes[] = [
   {
     label: "PEQUENO",
     size: "300",
+    price: 10,
+    delivery: 5,
   },
   {
     label: "MÉDIO",
     size: "500",
+    price: 12,
+    delivery: 7,
   },
   {
     label: "GRANDE",
     size: "700",
+    price: 15,
+    delivery: 9,
   },
 ];
 
