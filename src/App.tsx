@@ -3,71 +3,51 @@ import { fruits, sizes, toppings } from "./enums";
 import "./App.scss";
 
 function App() {
-  const [toppingsList, setToppingsList] = useState(
-    toppings.map((item) => {
+  const INITIAL_DATA = {
+    fruits: fruits.map((fruit) => {
+      return { label: fruit, checked: false };
+    }),
+    sizes: sizes.map((size) => {
+      return { ...size, checked: false };
+    }),
+    toppings: toppings.map((candy) => {
       return {
-        candy: item,
+        label: candy,
         checked: false,
       };
-    })
-  );
-  const [order, setOrder] = useState({
-    fruit: "",
-    size: "",
-    toppings: toppingsList,
-  });
+    }),
+  };
+
+  const [order, setOrder] = useState(INITIAL_DATA);
 
   // useEffect(() => console.log(order), [order]);
-  useEffect(
-    () =>
-      setOrder((state) => {
-        return { ...state, toppings: toppingsList };
-      }),
-    [toppingsList]
-  );
 
-  // const formRef = useRef(null);
+  function assignIngredient(selection, key, item) {
+    const isUnique = selection.toLowerCase() === "unique";
 
-  function assignFruits(fruit) {
     setOrder((state) => {
-      return { ...state, fruit };
+      const updatedItem = {
+        ...item,
+        checked: !item.checked,
+      };
+
+      const ingredientBlock = isUnique ? INITIAL_DATA[key] : state[key];
+
+      const updatedIngredient = ingredientBlock.map((item) => {
+        if (item.label === updatedItem.label) return updatedItem;
+
+        return item;
+      });
+
+      return {
+        ...state,
+        [key]: updatedIngredient,
+      };
     });
-  }
-
-  function assignSize(item) {
-    setOrder((state) => {
-      return { ...state, size: item.size };
-    });
-  }
-
-  function assignToppings(evt, topping) {
-    const updatedTopping = toppingsList.map((item) => {
-      if (item.candy === topping.candy) {
-        return { ...topping, checked: evt.target.checked };
-      }
-
-      return item;
-    });
-
-    setToppingsList(() => updatedTopping);
   }
 
   function clearOrder() {
-    const updatedTopping = toppingsList.map((item) => {
-      return {
-        ...item,
-        checked: false,
-      };
-    });
-
-    setOrder((state) => {
-      return {
-        ...state,
-        fruit: "",
-        size: "",
-      };
-    });
-    setToppingsList(() => updatedTopping);
+    setOrder(() => INITIAL_DATA);
   }
 
   function triggeredFromButton() {
@@ -77,20 +57,22 @@ function App() {
   return (
     <div className="App">
       <div className="order">
-        <form id="order" /* ref={formRef} */>
+        <form id="order">
           <div className="ingredient">
             <h2>Qual fruta você deseja no açaí?</h2>
-            {fruits
-              ? fruits.map((item) => {
+            {order.fruits
+              ? order.fruits.map((fruit, i) => {
                   return (
                     <div key={useId()}>
-                      <label htmlFor="fruits">{item}</label>
+                      <label htmlFor="fruits">{fruit.label}</label>
                       <input
                         type="radio"
                         name="fruits"
                         readOnly
-                        checked={order.fruit === item}
-                        onClick={() => assignFruits(item)}
+                        checked={fruit.checked}
+                        onClick={() =>
+                          assignIngredient("unique", "fruits", fruit)
+                        }
                       />
                     </div>
                   );
@@ -100,17 +82,19 @@ function App() {
 
           <div className="ingredient">
             <h2>Qual tamanho você deseja?</h2>
-            {sizes
-              ? sizes.map((item) => {
+            {order.sizes
+              ? order.sizes.map((size, i) => {
                   return (
                     <div key={useId()}>
-                      <label>{`${item.label} (${item.size}ml)`}</label>
+                      <label>{`${size.label} (${size.size}ml)`}</label>
                       <input
                         type="radio"
                         name="size"
                         readOnly
-                        checked={order.size === item.size}
-                        onClick={() => assignSize(item)}
+                        checked={size.checked}
+                        onClick={() =>
+                          assignIngredient("unique", "sizes", size)
+                        }
                       />
                     </div>
                   );
@@ -121,16 +105,18 @@ function App() {
           <div className="ingredient">
             <h2>Escolha seus toppings:</h2>
 
-            {toppingsList
-              ? toppingsList.map((topping) => {
+            {order.toppings
+              ? order.toppings.map((topp, I) => {
                   return (
                     <div key={useId()}>
-                      <label htmlFor="toppings">{topping.candy}</label>
+                      <label htmlFor="toppings">{topp.label}</label>
                       <input
                         type="checkbox"
                         name="toppings"
-                        checked={topping.checked}
-                        onChange={(evt) => assignToppings(evt, topping)}
+                        checked={topp.checked}
+                        onChange={() =>
+                          assignIngredient("multi", "toppings", topp)
+                        }
                       />
                     </div>
                   );
