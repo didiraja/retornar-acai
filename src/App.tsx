@@ -1,9 +1,31 @@
 import { useState, useId, useEffect } from "react";
-import { fruits, ISizes, sizes, toppings } from "./enums";
+import { fruits, ISize, sizes, toppings } from "./enums";
 import "./App.scss";
 
-function App() {
-  const INITIAL_DATA = {
+type BasicItem = {
+  label: string;
+  checked: boolean;
+};
+
+type SizeItem = {
+  label: ISize["label"];
+  size: ISize["size"];
+  price: number;
+  delivery: number;
+  checked: boolean;
+};
+
+interface IAppState {
+  fruits: BasicItem[];
+  sizes: SizeItem[];
+  toppings: BasicItem[];
+}
+
+function App(): JSX.Element {
+  const INITIAL_DATA: Record<
+    string,
+    IAppState["fruits"] | IAppState["sizes"] | IAppState["toppings"]
+  > = {
     fruits: fruits.map((fruit) => {
       return { label: fruit, checked: false };
     }),
@@ -19,27 +41,45 @@ function App() {
   };
 
   const [settings, setSettings] = useState({
-    showModal: true,
+    showModal: false,
   });
-  const [order, setOrder] = useState(INITIAL_DATA);
-  const [selected, setSelected] = useState(null);
 
-  function assignIngredient(selection, key, item) {
+  const [order, setOrder] = useState(INITIAL_DATA);
+
+  const [selected, setSelected] = useState({
+    fruit: {},
+    size: {},
+    toppings: {},
+  });
+
+  useEffect(() => {
+    const fruitSelected = order.fruits.find((item) => item.checked === true);
+    const sizeSelected = order.sizes.find((item) => item.checked === true);
+    const toppsSelected = order.toppings.filter(
+      (item) => item.checked === true
+    );
+
+    setSelected((state) => {
+      return {
+        ...state,
+        fruit: fruitSelected,
+        size: sizeSelected,
+        toppings: toppsSelected,
+      };
+    });
+  }, [order]);
+
+  function assignIngredient(
+    selection: "unique" | "multi",
+    key: string,
+    item: BasicItem | SizeItem
+  ) {
     const isUnique = selection.toLowerCase() === "unique";
 
-    const updatedItem = {
+    const updatedItem: BasicItem | SizeItem = {
       ...item,
       checked: !item.checked,
     };
-
-    if (isUnique) {
-      setSelected((state) => {
-        return {
-          ...state,
-          [key]: updatedItem,
-        };
-      });
-    }
 
     const ingredientBlock = isUnique ? INITIAL_DATA[key] : order[key];
 
@@ -62,10 +102,16 @@ function App() {
   }
 
   function finishOrder() {
-    // console.log(order);
-    // setSettings(({ showModal }) => {
-    //   return { showModal: !showModal };
-    // });
+    const isFruitSelected = order.fruits.some(
+      (option) => option.checked === true
+    );
+    const isSizeSelected = order.sizes.some(
+      (option) => option.checked === true
+    );
+    if (isFruitSelected && isSizeSelected)
+      setSettings(({ showModal }) => {
+        return { showModal: !showModal };
+      });
   }
   return (
     <div className="App">
@@ -73,7 +119,7 @@ function App() {
         <div className="ingredient">
           <h2>Qual fruta você deseja no açaí?</h2>
           {order.fruits
-            ? order.fruits.map((fruit, i) => {
+            ? order.fruits.map((fruit) => {
                 return (
                   <div key={useId()}>
                     <label htmlFor="fruits">{fruit.label}</label>
@@ -95,7 +141,7 @@ function App() {
         <div className="ingredient">
           <h2>Qual tamanho você deseja?</h2>
           {order.sizes
-            ? order.sizes.map((size, i) => {
+            ? order.sizes.map((size) => {
                 return (
                   <div key={useId()}>
                     <label>{`${size.label} (${size.size}ml)`}</label>
@@ -144,46 +190,41 @@ function App() {
 
           <p>Seu pedido está sendo preparado e já já, sai para entrega!</p>
 
-          <h3>Preço</h3>
-          {selected?.sizes ? (
+          <h3>Preço:</h3>
+          {selected.size ? (
             <p>
-              <strong>$ {selected.sizes.price}</strong>
+              <strong>$ {selected.size.price}</strong>
             </p>
           ) : null}
 
           <h3>Entrega:</h3>
 
-          {selected?.sizes ? (
+          {selected.size ? (
             <p>
-              Chega em <strong>{`${selected.sizes.delivery} minutos`}</strong>
+              Chega em <strong>{`${selected.size.delivery} minutos`}</strong>
             </p>
           ) : null}
 
           <h3>Detalhes do pedido:</h3>
           <ul>
-            {selected?.fruits ? (
+            {selected.fruit ? (
               <li>
-                <strong>Fruta:</strong> <p>{selected.fruits.label}</p>
+                <strong>Fruta:</strong> <p>{selected.fruit.label}</p>
               </li>
             ) : null}
 
-            {selected?.sizes ? (
+            {selected.size ? (
               <li>
-                <strong>Tamanho:</strong> <p>{selected.sizes.size}ml</p>
+                <strong>Tamanho:</strong> <p>{selected.size.size}ml</p>
               </li>
             ) : null}
 
             <strong>Toppings:</strong>
-            {order.toppings?.map((topp) => {
-              if (topp.checked)
-                return (
-                  <li key={useId()}>
-                    <p>{topp.label}</p>
-                  </li>
-                );
-
-              return <li key={useId()}></li>;
-            })}
+            {Array.isArray(selected.toppings)
+              ? selected.toppings?.map((item) => {
+                  return <li key={item.label}>{item.label}</li>;
+                })
+              : null}
           </ul>
         </div>
       ) : null}

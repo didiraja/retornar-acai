@@ -1,13 +1,13 @@
 export const fruits: string[] = ["MORANGO", "BANANA", "KIWI"];
 
-export interface ISizes {
+export interface ISize {
   label: "PEQUENO" | "MÉDIO" | "GRANDE";
   size: "300" | "500" | "700";
   price: number;
   delivery: number;
 }
 
-export const sizes: ISizes[] = [
+export const sizes: ISize[] = [
   {
     label: "PEQUENO",
     size: "300",
